@@ -1,0 +1,57 @@
+{
+  "name": "alexometer",
+  "displayName": "Alexometer",
+  "version": "0.1.0",
+  "description": "Inspect any website's design — extract colors, fonts, spacing, SVGs, Lottie, and export to code.",
+  "author": "aloe",
+  "scripts": {
+    "dev": "plasmo dev",
+    "build": "plasmo build",
+    "package": "plasmo package",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@plasmohq/storage": "^1.15.0",
+    "fflate": "^0.8.2",
+    "plasmo": "0.90.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@plasmohq/prettier-plugin-sort-imports": "4.0.1",
+    "@types/chrome": "^0.0.287",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitest/coverage-v8": "^2.1.9",
+    "autoprefixer": "^10.4.20",
+    "happy-dom": "^15.11.7",
+    "postcss": "^8.4.49",
+    "prettier": "3.2.5",
+    "tailwindcss": "^3.4.17",
+    "typescript": "5.7.3",
+    "vitest": "^2.1.9"
+  },
+  "manifest": {
+    "permissions": [
+      "activeTab",
+      "scripting",
+      "sidePanel",
+      "storage",
+      "downloads",
+      "clipboardWrite",
+      "tabs"
+    ],
+    "host_permissions": [
+      "<all_urls>"
+    ],
+    "commands": {
+      "toggle-panel": {
+        "suggested_key": {
+          "default": "Alt+Shift+A"
+        },
+        "description": "Toggle Alexometer side panel"
+      }
+    }
+  }
+}
