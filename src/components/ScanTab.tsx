@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { addPalette, addTokenSet, getCachedScan, setCachedScan } from "../storage"
+import { addAsset, addPalette, addTokenSet, getCachedScan, setCachedScan } from "../storage"
 import type { Message, ScanResult, ScannedAsset, Settings, TokenFormat } from "../types"
 import { formatColor, parseColor } from "../utils/color"
 import { getActiveTab, sendToTab } from "../utils/messaging"
@@ -90,6 +90,31 @@ export function ScanTab({ settings, onToast }: Props) {
       createdAt: new Date().toISOString()
     })
     onToast(`Saved ${format} tokens`)
+  }
+
+  const saveAsset = async (asset: ScannedAsset) => {
+    if (!scan) return
+    let dataUrl: string | undefined
+    if (!asset.inlineSvg && (asset.type === "image" || asset.type === "svg")) {
+      const tab = await getActiveTab()
+      if (tab?.id) {
+        const resp = await sendToTab<{ ok: boolean; dataUrl: string | null }>(tab.id, {
+          type: "asset:fetch",
+          url: asset.url
+        } satisfies Message)
+        if (resp?.dataUrl) dataUrl = resp.dataUrl
+      }
+    }
+    await addAsset({
+      id: crypto.randomUUID(),
+      type: asset.type,
+      url: asset.url,
+      dataUrl,
+      inlineSvg: asset.inlineSvg,
+      sourceUrl: scan.url,
+      createdAt: new Date().toISOString()
+    })
+    onToast(asset.type === "image" && !asset.inlineSvg && !dataUrl ? "Saved (no preview)" : "Saved")
   }
 
   const downloadAsset = async (asset: ScannedAsset) => {
@@ -211,7 +236,7 @@ export function ScanTab({ settings, onToast }: Props) {
           <Section title={`Assets (${scan.assets.length})`}>
             <div className="space-y-1.5">
               {scan.assets.slice(0, 30).map((a, i) => (
-                <AssetCard key={`${a.url}-${i}`} asset={a} onDownload={downloadAsset} />
+                <AssetCard key={`${a.url}-${i}`} asset={a} onDownload={downloadAsset} onSave={saveAsset} />
               ))}
             </div>
             {scan.assets.length > 0 && (

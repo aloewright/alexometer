@@ -35,6 +35,10 @@ export function InspectTab({ settings, onToast }: Props) {
         setPicked(message.payload)
         setHover(null)
       }
+      if (message.type === "inspector:stopped") {
+        setActive(false)
+        setHover(null)
+      }
     }
     chrome.runtime.onMessage.addListener(listener)
     return () => chrome.runtime.onMessage.removeListener(listener)

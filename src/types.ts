@@ -127,6 +127,7 @@ export const DEFAULT_STORAGE: StorageSchema = {
 export type Message =
   | { type: "inspector:start" }
   | { type: "inspector:stop" }
+  | { type: "inspector:stopped" }
   | { type: "inspector:hover"; payload: ElementSnapshot }
   | { type: "inspector:pick"; payload: ElementSnapshot }
   | { type: "scan:run" }
