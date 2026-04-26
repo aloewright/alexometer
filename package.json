@@ -3,7 +3,7 @@
   "displayName": "Alexometer",
   "version": "0.1.0",
   "description": "Inspect any website's design — extract colors, fonts, spacing, SVGs, Lottie, and export to code.",
-  "author": "aloe",
+  "author": "aloe <help@pdx.software>",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
@@ -34,6 +34,7 @@
     "vitest": "^2.1.9"
   },
   "manifest": {
+    "author": "aloe",
     "permissions": [
       "activeTab",
       "scripting",
