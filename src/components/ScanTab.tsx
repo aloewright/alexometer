@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
-import { addPalette, addTokenSet } from "../storage"
+import { addPalette, addTokenSet, getCachedScan, setCachedScan } from "../storage"
 import type { Message, ScanResult, ScannedAsset, Settings, TokenFormat } from "../types"
 import { formatColor, parseColor } from "../utils/color"
 import { getActiveTab, sendToTab } from "../utils/messaging"
@@ -19,8 +19,24 @@ interface Props {
 
 export function ScanTab({ settings, onToast }: Props) {
   const [scan, setScan] = useState<ScanResult | null>(null)
+  const [cachedAt, setCachedAt] = useState<string | null>(null)
   const [colorFormat, setColorFormat] = useState(settings.colorFormat)
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const tab = await getActiveTab()
+      if (cancelled || !tab?.url) return
+      const cached = await getCachedScan(tab.url)
+      if (cancelled || !cached) return
+      setScan(cached.result)
+      setCachedAt(cached.cachedAt)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const runScan = async () => {
     const tab = await getActiveTab()
@@ -35,6 +51,8 @@ export function ScanTab({ settings, onToast }: Props) {
       return
     }
     setScan(resp.result)
+    setCachedAt(new Date().toISOString())
+    await setCachedScan(resp.result)
     onToast(`Scanned ${resp.result.colors.length} colors · ${resp.result.assets.length} assets`)
   }
 
@@ -141,8 +159,13 @@ export function ScanTab({ settings, onToast }: Props) {
 
       {scan && (
         <>
-          <div className="flex items-center justify-between">
-            <div className="text-[11px] font-mono text-fg/50 truncate">{hostname(scan.url)}</div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <div className="text-[11px] font-mono text-fg/50 truncate">{hostname(scan.url)}</div>
+              {cachedAt && (
+                <div className="text-[10px] text-fg/30">scanned {relativeTime(cachedAt)}</div>
+              )}
+            </div>
             <ColorFormatToggle value={colorFormat} onChange={setColorFormat} />
           </div>
 
@@ -235,6 +258,20 @@ function hostname(url: string): string {
   } catch {
     return "page"
   }
+}
+
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const secs = Math.floor(diff / 1000)
+  if (secs < 30) return "just now"
+  if (secs < 60) return `${secs}s ago`
+  const mins = Math.floor(secs / 60)
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days}d ago`
+  return new Date(iso).toLocaleDateString()
 }
 
 function filenameFor(asset: ScannedAsset): string {

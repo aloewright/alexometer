@@ -92,11 +92,18 @@ export interface Settings {
   }
 }
 
+export interface CachedScan {
+  url: string
+  result: ScanResult
+  cachedAt: string
+}
+
 export interface StorageSchema {
   palettes: SavedPalette[]
   tokens: SavedTokenSet[]
   assets: SavedAsset[]
   settings: Settings
+  scanCache: Record<string, CachedScan>
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -113,7 +120,8 @@ export const DEFAULT_STORAGE: StorageSchema = {
   palettes: [],
   tokens: [],
   assets: [],
-  settings: DEFAULT_SETTINGS
+  settings: DEFAULT_SETTINGS,
+  scanCache: {}
 }
 
 export type Message =

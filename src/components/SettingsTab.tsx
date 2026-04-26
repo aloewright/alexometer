@@ -1,15 +1,17 @@
+import { clearScanCache } from "../storage"
 import type { ColorFormat, Settings, TokenFormat } from "../types"
 import { ColorFormatToggle } from "./ColorFormatToggle"
 
 interface Props {
   settings: Settings
   onChange: (next: Partial<Settings>) => void
+  onToast?: (msg: string) => void
 }
 
 const TOKEN_FORMATS: TokenFormat[] = ["tailwind", "css", "json"]
 const TARGETS: ("AA" | "AAA")[] = ["AA", "AAA"]
 
-export function SettingsTab({ settings, onChange }: Props) {
+export function SettingsTab({ settings, onChange, onToast }: Props) {
   return (
     <div className="p-3 space-y-4">
       <Card title="Default color format" hint="Used in Inspect and Scan tabs.">
@@ -62,6 +64,17 @@ export function SettingsTab({ settings, onChange }: Props) {
             onChange={(v) => onChange({ exportDefaults: { ...settings.exportDefaults, includeSpacing: v } })}
           />
         </div>
+      </Card>
+
+      <Card title="Cached scans" hint="Scans are saved per-URL so reopening the panel skips re-scanning.">
+        <button
+          onClick={async () => {
+            await clearScanCache()
+            onToast?.("Scan cache cleared")
+          }}
+          className="text-[11px] py-1.5 px-3 rounded bg-destructive/20 text-destructive hover:bg-destructive/30 transition-colors">
+          Clear scan cache
+        </button>
       </Card>
 
       <Card title="Keyboard shortcut">

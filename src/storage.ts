@@ -3,27 +3,33 @@ import { Storage } from "@plasmohq/storage"
 import {
   DEFAULT_SETTINGS,
   DEFAULT_STORAGE,
+  type CachedScan,
   type SavedAsset,
   type SavedPalette,
   type SavedTokenSet,
+  type ScanResult,
   type Settings,
   type StorageSchema
 } from "./types"
 
+const SCAN_CACHE_LIMIT = 50
+
 const storage = new Storage({ area: "local" })
 
 export async function getAll(): Promise<StorageSchema> {
-  const [palettes, tokens, assets, settings] = await Promise.all([
+  const [palettes, tokens, assets, settings, scanCache] = await Promise.all([
     storage.get<SavedPalette[]>("palettes"),
     storage.get<SavedTokenSet[]>("tokens"),
     storage.get<SavedAsset[]>("assets"),
-    storage.get<Settings>("settings")
+    storage.get<Settings>("settings"),
+    storage.get<Record<string, CachedScan>>("scanCache")
   ])
   return {
     palettes: palettes ?? DEFAULT_STORAGE.palettes,
     tokens: tokens ?? DEFAULT_STORAGE.tokens,
     assets: assets ?? DEFAULT_STORAGE.assets,
-    settings: settings ?? DEFAULT_STORAGE.settings
+    settings: settings ?? DEFAULT_STORAGE.settings,
+    scanCache: scanCache ?? DEFAULT_STORAGE.scanCache
   }
 }
 
@@ -87,6 +93,36 @@ export async function addAsset(asset: SavedAsset): Promise<void> {
 export async function removeAsset(id: string): Promise<void> {
   const list = await getAssets()
   await setAssets(list.filter((a) => a.id !== id))
+}
+
+export function scanCacheKey(url: string): string {
+  return url.split("#")[0]
+}
+
+export async function getCachedScan(url: string): Promise<CachedScan | null> {
+  const cache = (await storage.get<Record<string, CachedScan>>("scanCache")) ?? {}
+  return cache[scanCacheKey(url)] ?? null
+}
+
+export async function setCachedScan(result: ScanResult): Promise<void> {
+  const cache = (await storage.get<Record<string, CachedScan>>("scanCache")) ?? {}
+  const key = scanCacheKey(result.url)
+  cache[key] = { url: key, result, cachedAt: new Date().toISOString() }
+
+  const entries = Object.values(cache)
+  if (entries.length > SCAN_CACHE_LIMIT) {
+    entries.sort((a, b) => (a.cachedAt < b.cachedAt ? -1 : 1))
+    const overflow = entries.length - SCAN_CACHE_LIMIT
+    for (let i = 0; i < overflow; i++) {
+      delete cache[entries[i].url]
+    }
+  }
+
+  await storage.set("scanCache", cache)
+}
+
+export async function clearScanCache(): Promise<void> {
+  await storage.set("scanCache", {})
 }
 
 export { storage }

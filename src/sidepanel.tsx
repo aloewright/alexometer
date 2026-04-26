@@ -42,7 +42,9 @@ function SidePanel() {
         {tab === "inspect" && <InspectTab settings={settings} onToast={showToast} />}
         {tab === "scan" && <ScanTab settings={settings} onToast={showToast} />}
         {tab === "library" && <LibraryTab onToast={showToast} />}
-        {tab === "settings" && <SettingsTab settings={settings} onChange={updateSettings} />}
+        {tab === "settings" && (
+          <SettingsTab settings={settings} onChange={updateSettings} onToast={showToast} />
+        )}
       </main>
       <Toast message={toast} />
     </div>
